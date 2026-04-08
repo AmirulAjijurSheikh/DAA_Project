@@ -338,6 +338,18 @@ input[type=range] { accent-color: var(--accent); width: 80px; }
 .algo-card:nth-child(6) { animation-delay: 0.25s; }
 .algo-card:nth-child(7) { animation-delay: 0.3s; }
 .algo-card:nth-child(8) { animation-delay: 0.35s; }
+.algo-card:nth-child(9) { animation-delay: 0.40s; }
+
+/* ── GRAPH COLOURING ── */
+.gc-graph-wrap { position: relative; }
+#gc-canvas { width: 100%; border-radius: var(--radius-sm); }
+.gc-palette { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.gc-color-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 4px 10px; border-radius: 100px;
+  font-family: var(--mono); font-size: 11px;
+  border: 1px solid var(--border);
+}
 
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
 .running { animation: pulse 1s infinite; }
@@ -380,11 +392,11 @@ input[type=range] { accent-color: var(--accent); width: 80px; }
   <div class="hero">
     <div class="hero-tag">DAA Lab Project</div>
     <h1>Learn Algorithms <strong>Visually</strong></h1>
-    <p>Step-by-step animated visualizations of 8 classic algorithms — from Greedy to Backtracking. Enter your own data and watch them come alive.</p>
+    <p>Step-by-step animated visualizations of 9 classic algorithms — from Greedy to Backtracking. Enter your own data and watch them come alive.</p>
   </div>
 
   <div class="stats-bar">
-    <div class="stat-item"><div class="stat-num">8</div><div class="stat-lbl">Algorithms</div></div>
+    <div class="stat-item"><div class="stat-num">9</div><div class="stat-lbl">Algorithms</div></div>
     <div class="stat-item"><div class="stat-num">4</div><div class="stat-lbl">Categories</div></div>
     <div class="stat-item"><div class="stat-num">∞</div><div class="stat-lbl">Custom Inputs</div></div>
   </div>
@@ -505,6 +517,20 @@ input[type=range] { accent-color: var(--accent); width: 80px; }
       </div>
     </div>
 
+    <div class="algo-card" style="--card-color:#e879f9" onclick="openAlgo('graphcoloring')">
+      <div class="card-num">09</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🎨</div>
+        <span class="card-badge">Backtracking</span>
+      </div>
+      <div class="card-title">Graph Colouring</div>
+      <div class="card-desc">Assign colours to graph nodes so no two adjacent nodes share a colour — using backtracking to explore all possibilities.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(mⁿ)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -589,13 +615,14 @@ function setupAlgo(name) {
     lcs: { title: 'LCS — DNA Sequences', tag: 'Dynamic Programming', color: '#7c6af7' },
     obst: { title: 'Optimal Binary Search Tree', tag: 'Dynamic Programming', color: '#4ecdc4' },
     hamiltonian: { title: 'Hamiltonian Cycle', tag: 'Backtracking', color: '#ff6b6b' },
+    graphcoloring: { title: 'Graph Colouring — Backtracking', tag: 'Backtracking', color: '#e879f9' },
   };
   const c = configs[name];
   document.getElementById('algo-title').textContent = c.title;
   const badge = document.getElementById('algo-tag-badge');
   badge.textContent = c.tag;
   badge.style.cssText = `color:${c.color};border:1px solid ${c.color}40;background:${c.color}15;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;`;
-  const inputFns = { complexity: setupComplexityInputs, mst: setupMSTInputs, knapsack: setupKnapsackInputs, activity: setupActivityInputs, subarray: setupSubarrayInputs, lcs: setupLCSInputs, obst: setupOBSTInputs, hamiltonian: setupHamiltonianInputs };
+  const inputFns = { complexity: setupComplexityInputs, mst: setupMSTInputs, knapsack: setupKnapsackInputs, activity: setupActivityInputs, subarray: setupSubarrayInputs, lcs: setupLCSInputs, obst: setupOBSTInputs, hamiltonian: setupHamiltonianInputs, graphcoloring: setupGraphColoringInputs };
   inputFns[name]();
   renderSidebar(name, null);
 }
@@ -606,7 +633,7 @@ function setupAlgo(name) {
 function runAlgo() {
   clearInterval(animTimer);
   stepIdx = 0; logs = [];
-  const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian };
+  const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian, graphcoloring: runGraphColoring };
   runners[currentAlgo]();
   if (stepQueue.length > 0) {
     animTimer = setInterval(() => {
@@ -618,7 +645,7 @@ function runAlgo() {
 function stepAlgo() {
   clearInterval(animTimer);
   if (stepIdx === 0 && stepQueue.length === 0) {
-    const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian };
+    const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian, graphcoloring: runGraphColoring };
     runners[currentAlgo]();
   }
   if (stepIdx < stepQueue.length) { stepQueue[stepIdx](); stepIdx++; }
@@ -642,6 +669,7 @@ function renderSidebar(algo, result) {
     lcs: { time: 'O(m × n)', space: 'O(m × n)', category: 'Dynamic Programming' },
     obst: { time: 'O(n³)', space: 'O(n²)', category: 'Dynamic Programming' },
     hamiltonian: { time: 'O(n!)', space: 'O(n)', category: 'Backtracking' },
+    graphcoloring: { time: 'O(mⁿ)', space: 'O(V)', category: 'Backtracking' },
   };
   const c = complexities[algo];
   const resultHTML = result ? result : '<div style="color:var(--text3);font-size:13px;margin-top:4px;">Run the algorithm to see results.</div>';
@@ -1303,6 +1331,239 @@ function runHamiltonian() {
     return false;
   }
   solve(1);
+}
+
+// ══════════════════════════════════════════════════════
+//  9. GRAPH COLOURING — BACKTRACKING
+// ══════════════════════════════════════════════════════
+const GC_COLORS = ['#e879f9','#4ecdc4','#ffd93d','#ff6b6b','#a8e063','#7c6af7','#f97316','#38bdf8'];
+const GC_COLOR_NAMES = ['Violet','Teal','Yellow','Red','Green','Indigo','Orange','Sky'];
+
+// Default graph: Petersen-style 6-node graph
+const GC_DEFAULT_NODES = [
+  {x:0.50,y:0.10,label:'0'},{x:0.85,y:0.38,label:'1'},
+  {x:0.72,y:0.82,label:'2'},{x:0.28,y:0.82,label:'3'},
+  {x:0.15,y:0.38,label:'4'},{x:0.50,y:0.50,label:'5'}
+];
+const GC_DEFAULT_ADJ = [
+  [0,1,0,0,1,1],
+  [1,0,1,0,0,1],
+  [0,1,0,1,0,1],
+  [0,0,1,0,1,1],
+  [1,0,0,1,0,1],
+  [1,1,1,1,1,0]
+];
+
+let gcColors = [];
+let gcNodes = [];
+let gcAdj  = [];
+let gcNumColors = 3;
+
+function setupGraphColoringInputs() {
+  gcNodes = GC_DEFAULT_NODES.map(n => ({...n}));
+  gcAdj   = GC_DEFAULT_ADJ.map(r => [...r]);
+  gcColors = Array(gcNodes.length).fill(-1);
+  document.getElementById('algo-inputs').innerHTML = `
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+      <div>
+        <div class="input-label">Number of Colours (m)</div>
+        <input type="number" class="txt-input" id="gc-m" value="3" min="1" max="8" style="max-width:100px;" />
+      </div>
+      <div style="flex:1;min-width:220px;">
+        <div class="input-label">Graph preset</div>
+        <select class="txt-input" id="gc-preset" onchange="gcSwitchPreset()" style="cursor:pointer;">
+          <option value="0">6-node (pentagon + centre)</option>
+          <option value="1">Cycle C5 (5 nodes)</option>
+          <option value="2">Complete K4 (4 nodes)</option>
+          <option value="3">Bipartite K3,3 (6 nodes)</option>
+        </select>
+      </div>
+    </div>`;
+  document.getElementById('viz-title').textContent = 'Graph Colouring — Backtracking';
+  document.getElementById('viz-content').innerHTML = `
+    <div class="gc-graph-wrap">
+      <canvas id="gc-canvas" height="300"></canvas>
+    </div>
+    <div class="gc-palette" id="gc-palette"></div>`;
+  drawGCGraph();
+  renderSidebar('graphcoloring', null);
+}
+
+const GC_PRESETS = [
+  {
+    nodes: GC_DEFAULT_NODES,
+    adj:   GC_DEFAULT_ADJ
+  },
+  {
+    nodes: [
+      {x:0.50,y:0.08,label:'0'},{x:0.86,y:0.38,label:'1'},
+      {x:0.70,y:0.82,label:'2'},{x:0.30,y:0.82,label:'3'},
+      {x:0.14,y:0.38,label:'4'}
+    ],
+    adj: [
+      [0,1,0,0,1],[1,0,1,0,0],[0,1,0,1,0],[0,0,1,0,1],[1,0,0,1,0]
+    ]
+  },
+  {
+    nodes: [
+      {x:0.25,y:0.20,label:'0'},{x:0.75,y:0.20,label:'1'},
+      {x:0.75,y:0.78,label:'2'},{x:0.25,y:0.78,label:'3'}
+    ],
+    adj: [
+      [0,1,1,1],[1,0,1,1],[1,1,0,1],[1,1,1,0]
+    ]
+  },
+  {
+    nodes: [
+      {x:0.20,y:0.22,label:'A'},{x:0.50,y:0.22,label:'B'},{x:0.80,y:0.22,label:'C'},
+      {x:0.20,y:0.76,label:'D'},{x:0.50,y:0.76,label:'E'},{x:0.80,y:0.76,label:'F'}
+    ],
+    adj: [
+      [0,0,0,1,1,1],[0,0,0,1,1,1],[0,0,0,1,1,1],
+      [1,1,1,0,0,0],[1,1,1,0,0,0],[1,1,1,0,0,0]
+    ]
+  }
+];
+
+function gcSwitchPreset() {
+  const idx = parseInt(document.getElementById('gc-preset').value);
+  gcNodes = GC_PRESETS[idx].nodes.map(n => ({...n}));
+  gcAdj   = GC_PRESETS[idx].adj.map(r => [...r]);
+  gcColors = Array(gcNodes.length).fill(-1);
+  clearInterval(animTimer);
+  stepQueue = []; stepIdx = 0; logs = [];
+  drawGCGraph();
+  renderSidebar('graphcoloring', null);
+  document.getElementById('step-log') && (document.getElementById('step-log').innerHTML = '<div style="color:var(--text3);font-size:11px;font-family:var(--mono)">Waiting to run...</div>');
+}
+
+function drawGCGraph() {
+  const canvas = document.getElementById('gc-canvas');
+  if (!canvas) return;
+  canvas.width  = canvas.parentElement.offsetWidth;
+  canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const nx = n => n.x * W * 0.82 + W * 0.09;
+  const ny = n => n.y * H * 0.82 + H * 0.08;
+
+  // Draw edges
+  gcAdj.forEach((row, i) => row.forEach((v, j) => {
+    if (v && i < j) {
+      const conflict = gcColors[i] !== -1 && gcColors[j] !== -1 && gcColors[i] === gcColors[j];
+      ctx.strokeStyle = conflict ? '#ff3366' : '#2a2a3a';
+      ctx.lineWidth   = conflict ? 2.5 : 1;
+      if (conflict) ctx.setLineDash([5,3]);
+      ctx.beginPath();
+      ctx.moveTo(nx(gcNodes[i]), ny(gcNodes[i]));
+      ctx.lineTo(nx(gcNodes[j]), ny(gcNodes[j]));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }));
+
+  // Draw nodes
+  gcNodes.forEach((n, i) => {
+    const c = gcColors[i];
+    const fill  = c >= 0 ? GC_COLORS[c] : '#12121a';
+    const stroke = c >= 0 ? GC_COLORS[c] : '#2a2a3a';
+    ctx.fillStyle = fill;
+    ctx.globalAlpha = c >= 0 ? 0.85 : 1;
+    ctx.beginPath(); ctx.arc(nx(n), ny(n), 22, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.strokeStyle = stroke; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.fillStyle = c >= 0 ? '#fff' : '#f0f0f8';
+    ctx.font = 'bold 13px Space Mono';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, nx(n), ny(n));
+  });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+  // Update palette
+  const palette = document.getElementById('gc-palette');
+  if (palette) {
+    const usedColors = [...new Set(gcColors.filter(c => c >= 0))];
+    palette.innerHTML = usedColors.map(c =>
+      `<div class="gc-color-chip" style="border-color:${GC_COLORS[c]}40;background:${GC_COLORS[c]}18;color:${GC_COLORS[c]};">
+        <span style="width:10px;height:10px;border-radius:50%;background:${GC_COLORS[c]};display:inline-block;"></span>
+        ${GC_COLOR_NAMES[c]}
+      </div>`
+    ).join('');
+  }
+}
+
+function runGraphColoring() {
+  stepQueue = [];
+  gcNumColors = parseInt(document.getElementById('gc-m').value) || 3;
+  gcNumColors = Math.max(1, Math.min(8, gcNumColors));
+  gcColors = Array(gcNodes.length).fill(-1);
+  const n = gcNodes.length;
+  let solutionFound = false;
+
+  function isSafe(node, color) {
+    for (let i = 0; i < n; i++) {
+      if (gcAdj[node][i] && gcColors[i] === color) return false;
+    }
+    return true;
+  }
+
+  function solve(node) {
+    if (node === n) {
+      solutionFound = true;
+      const snap = [...gcColors];
+      stepQueue.push(() => {
+        gcColors = snap;
+        drawGCGraph();
+        const colorsUsed = new Set(snap).size;
+        addLog(`✅ Solution found! ${colorsUsed} colour(s) used`);
+        renderSidebar('graphcoloring',
+          `<div class="result-big">${colorsUsed}</div>
+           <div class="result-sub">Colours Used</div>
+           <div class="result-string">Valid Colouring Found ✓</div>
+           <div style="margin-top:10px;font-size:12px;color:var(--text3);">Max allowed: ${gcNumColors}</div>`);
+      });
+      return true;
+    }
+
+    for (let c = 0; c < gcNumColors; c++) {
+      if (isSafe(node, c)) {
+        gcColors[node] = c;
+        const snapAssign = [...gcColors];
+        const nodeLabel = gcNodes[node].label;
+        const colorName = GC_COLOR_NAMES[c];
+        stepQueue.push(() => {
+          gcColors = snapAssign;
+          drawGCGraph();
+          addLog(`Node ${nodeLabel} → ${colorName}`);
+        });
+
+        if (solve(node + 1)) return true;
+
+        // Backtrack
+        gcColors[node] = -1;
+        const snapBack = [...gcColors];
+        stepQueue.push(() => {
+          gcColors = snapBack;
+          drawGCGraph();
+          addLog(`↩ Backtrack: node ${nodeLabel} uncoloured`);
+        });
+      }
+    }
+    return false;
+  }
+
+  solve(0);
+
+  if (!solutionFound && stepQueue.length === 0) {
+    stepQueue.push(() => {
+      addLog('❌ No valid colouring found with given colours');
+      renderSidebar('graphcoloring',
+        `<div class="result-big">✗</div>
+         <div class="result-sub">No Solution</div>
+         <div class="result-string">Increase m and retry</div>`);
+    });
+  }
 }
 </script>
 </body>
