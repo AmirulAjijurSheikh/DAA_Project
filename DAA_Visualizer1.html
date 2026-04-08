@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DAA Visualizer — Algorithm Learning Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --bg: #0a0a0f;
+  --surface: #12121a;
+  --surface2: #1a1a26;
+  --border: #2a2a3a;
+  --accent: #7c6af7;
+  --accent2: #4ecdc4;
+  --accent3: #ff6b6b;
+  --accent4: #ffd93d;
+  --text: #f0f0f8;
+  --text2: #888899;
+  --text3: #555566;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* Animated background grid */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.3;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(10,10,15,0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 60px;
+}
+.logo { font-family: var(--mono); font-size: 15px; color: var(--accent); letter-spacing: 0.05em; }
+.logo span { color: var(--text2); }
+nav { display: flex; gap: 4px; }
+nav button {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  padding: 6px 14px; border-radius: var(--radius-sm);
+  border: none; background: transparent; color: var(--text2);
+  cursor: pointer; transition: all 0.2s;
+}
+nav button:hover, nav button.active { background: var(--surface2); color: var(--text); }
+nav button.active { color: var(--accent); }
+
+/* ── MAIN LAYOUT ── */
+.page { position: relative; z-index: 1; }
+#home-page { min-height: calc(100vh - 60px); display: block; }
+#algo-page { min-height: calc(100vh - 60px); display: none; }
+
+/* ── HOME HERO ── */
+.hero {
+  padding: 5rem 2rem 3rem;
+  text-align: center;
+  max-width: 700px; margin: 0 auto;
+}
+.hero-tag {
+  display: inline-block;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.15em;
+  color: var(--accent); border: 1px solid var(--accent);
+  padding: 4px 12px; border-radius: 100px;
+  margin-bottom: 1.5rem; text-transform: uppercase;
+}
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 300; line-height: 1.1;
+  margin-bottom: 1.2rem;
+  letter-spacing: -0.02em;
+}
+.hero h1 strong { font-weight: 600; color: var(--accent); }
+.hero p { font-size: 16px; color: var(--text2); line-height: 1.7; max-width: 480px; margin: 0 auto 2.5rem; }
+
+/* stats bar */
+.stats-bar {
+  display: flex; gap: 2rem; justify-content: center;
+  margin-bottom: 4rem;
+  padding-bottom: 3rem; border-bottom: 1px solid var(--border);
+}
+.stat-item { text-align: center; }
+.stat-num { font-family: var(--mono); font-size: 2rem; font-weight: 700; color: var(--accent); }
+.stat-lbl { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+/* ── ALGORITHM CARDS GRID ── */
+.section-header {
+  padding: 0 2rem 1.5rem;
+  display: flex; align-items: baseline; justify-content: space-between;
+  max-width: 1100px; margin: 0 auto;
+}
+.section-header h2 { font-size: 13px; font-weight: 500; color: var(--text3); text-transform: uppercase; letter-spacing: 0.12em; font-family: var(--mono); }
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  max-width: 1100px; margin: 0 auto 4rem;
+}
+.algo-card {
+  background: var(--bg);
+  padding: 1.75rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  position: relative; overflow: hidden;
+}
+.algo-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--card-color, var(--accent));
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.algo-card:hover { background: var(--surface); }
+.algo-card:hover::before { transform: scaleX(1); }
+
+.card-num { font-family: var(--mono); font-size: 11px; color: var(--text3); margin-bottom: 1rem; }
+.card-icon-row { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; }
+.card-icon {
+  width: 40px; height: 40px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  background: color-mix(in srgb, var(--card-color, var(--accent)) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-color, var(--accent)) 30%, transparent);
+}
+.card-badge {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+  padding: 3px 8px; border-radius: 100px;
+  color: var(--card-color, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--card-color, var(--accent)) 40%, transparent);
+  background: color-mix(in srgb, var(--card-color, var(--accent)) 10%, transparent);
+  text-transform: uppercase;
+}
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 6px; }
+.card-desc { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 1.2rem; }
+.card-footer { display: flex; align-items: center; justify-content: space-between; }
+.card-complexity { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+.card-arrow {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3); font-size: 12px;
+  transition: all 0.2s;
+}
+.algo-card:hover .card-arrow { border-color: var(--card-color, var(--accent)); color: var(--card-color, var(--accent)); transform: translateX(3px); }
+
+/* ── ALGO PAGE ── */
+.algo-topbar {
+  padding: 0 2rem;
+  height: 52px;
+  display: flex; align-items: center; gap: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+}
+.back-btn {
+  font-family: var(--mono); font-size: 12px; color: var(--text2);
+  background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: color 0.2s;
+}
+.back-btn:hover { color: var(--text); }
+.algo-name { font-size: 14px; font-weight: 600; }
+.algo-tag {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 100px;
+}
+
+.algo-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 0;
+  min-height: calc(100vh - 112px);
+}
+.algo-main { padding: 1.5rem; border-right: 1px solid var(--border); }
+.algo-sidebar { padding: 1.5rem; background: var(--surface); }
+
+/* controls */
+.ctrl-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.ctrl-btn {
+  font-family: var(--sans); font-size: 13px; font-weight: 500;
+  padding: 8px 18px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer; transition: all 0.2s;
+}
+.ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+.ctrl-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+.ctrl-btn.primary:hover { opacity: 0.85; }
+.ctrl-btn.danger { border-color: var(--accent3); color: var(--accent3); }
+.ctrl-btn.danger:hover { background: color-mix(in srgb, var(--accent3) 15%, transparent); }
+.speed-group { display: flex; align-items: center; gap: 8px; margin-left: auto; }
+.speed-group label { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+input[type=range] { accent-color: var(--accent); width: 80px; }
+
+/* input area */
+.input-section { margin-bottom: 1.5rem; }
+.input-label { font-size: 11px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.dna-input, .txt-input {
+  width: 100%; padding: 10px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text);
+  font-family: var(--mono); font-size: 14px;
+  outline: none; transition: border-color 0.2s;
+}
+.dna-input:focus, .txt-input:focus { border-color: var(--accent); }
+.input-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* visualization area */
+.viz-area {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.5rem;
+  min-height: 320px; position: relative;
+}
+.viz-title { font-family: var(--mono); font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.2rem; }
+
+/* ── LCS TABLE ── */
+.lcs-table { border-collapse: collapse; font-family: var(--mono); font-size: 13px; }
+.lcs-table th, .lcs-table td {
+  width: 38px; height: 38px; text-align: center;
+  border: 1px solid var(--border);
+  transition: background 0.3s, color 0.3s;
+}
+.lcs-table th { background: var(--surface2); color: var(--text3); font-weight: 400; }
+.lcs-table td { color: var(--text2); }
+.lcs-table td.active { background: color-mix(in srgb, var(--accent) 20%, transparent); color: var(--accent); font-weight: 700; }
+.lcs-table td.path { background: var(--accent); color: white; font-weight: 700; }
+
+/* sequence display */
+.seq-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 1rem; }
+.seq-char {
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: var(--mono); font-size: 14px; font-weight: 700;
+  color: var(--text2); transition: all 0.3s;
+}
+.seq-char.match { background: color-mix(in srgb, var(--accent) 20%, transparent); border-color: var(--accent); color: var(--accent); }
+
+/* ── MST GRAPH ── */
+#mst-canvas, #ham-canvas { width: 100%; border-radius: var(--radius-sm); }
+
+/* ── KNAPSACK ── */
+.knapsack-items { display: flex; flex-direction: column; gap: 8px; }
+.ks-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--surface2);
+  transition: all 0.3s;
+}
+.ks-item.selected { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+.ks-item.partial { border-color: var(--accent4); background: color-mix(in srgb, var(--accent4) 10%, transparent); }
+.ks-bar-wrap { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+.ks-bar { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.5s; }
+.ks-label { font-family: var(--mono); font-size: 12px; color: var(--text2); min-width: 80px; }
+.ks-ratio { font-family: var(--mono); font-size: 11px; color: var(--text3); min-width: 50px; text-align: right; }
+
+/* ── ACTIVITY SELECTION ── */
+.timeline-wrap { overflow-x: auto; }
+.timeline { position: relative; height: 200px; min-width: 500px; }
+.t-axis { position: absolute; bottom: 30px; left: 0; right: 0; height: 1px; background: var(--border); }
+.t-label { position: absolute; bottom: 10px; font-family: var(--mono); font-size: 10px; color: var(--text3); transform: translateX(-50%); }
+.activity-bar {
+  position: absolute; height: 28px;
+  border-radius: 4px; display: flex; align-items: center;
+  padding: 0 8px; font-family: var(--mono); font-size: 11px; font-weight: 700;
+  cursor: default; transition: all 0.3s;
+}
+
+/* ── MAX SUBARRAY ── */
+.array-row { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 1rem; }
+.arr-cell {
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: var(--mono); font-size: 14px; font-weight: 700;
+  transition: all 0.3s;
+}
+.arr-cell.current { border-color: var(--accent4); background: color-mix(in srgb, var(--accent4) 20%, transparent); color: var(--accent4); }
+.arr-cell.max-sub { border-color: var(--accent2); background: color-mix(in srgb, var(--accent2) 20%, transparent); color: var(--accent2); }
+.arr-cell.neg { color: var(--accent3); }
+
+/* ── OBST ── */
+#obst-canvas { width: 100%; }
+
+/* ── HAMILTONIAN ── */
+.ham-info { display: flex; gap: 1rem; margin-top: 1rem; flex-wrap: wrap; }
+.ham-badge {
+  padding: 6px 12px; border-radius: var(--radius-sm);
+  font-family: var(--mono); font-size: 12px;
+  border: 1px solid var(--border); color: var(--text2);
+}
+.ham-badge.found { border-color: var(--accent2); color: var(--accent2); background: color-mix(in srgb, var(--accent2) 10%, transparent); }
+
+/* ── COMPLEXITY CHART ── */
+#complexity-canvas { width: 100%; }
+
+/* ── SIDEBAR ── */
+.sidebar-section { margin-bottom: 1.5rem; }
+.sidebar-title { font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text3); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.result-big { font-family: var(--mono); font-size: 2.5rem; font-weight: 700; color: var(--accent); line-height: 1; margin-bottom: 4px; }
+.result-sub { font-size: 12px; color: var(--text3); }
+.result-string { font-family: var(--mono); font-size: 15px; font-weight: 700; color: var(--accent2); background: var(--surface2); padding: 8px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); margin-top: 8px; letter-spacing: 0.1em; word-break: break-all; }
+.info-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 50%, transparent); }
+.info-row:last-child { border-bottom: none; }
+.info-key { font-size: 12px; color: var(--text3); }
+.info-val { font-family: var(--mono); font-size: 12px; color: var(--text); }
+.step-log { max-height: 180px; overflow-y: auto; }
+.step-item { font-family: var(--mono); font-size: 11px; color: var(--text3); padding: 5px 0; border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent); line-height: 1.4; }
+.step-item:last-child { color: var(--accent2); border-bottom: none; }
+.step-log::-webkit-scrollbar { width: 4px; }
+.step-log::-webkit-scrollbar-track { background: transparent; }
+.step-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.algo-card { animation: fadeIn 0.4s ease both; }
+.algo-card:nth-child(2) { animation-delay: 0.05s; }
+.algo-card:nth-child(3) { animation-delay: 0.1s; }
+.algo-card:nth-child(4) { animation-delay: 0.15s; }
+.algo-card:nth-child(5) { animation-delay: 0.2s; }
+.algo-card:nth-child(6) { animation-delay: 0.25s; }
+.algo-card:nth-child(7) { animation-delay: 0.3s; }
+.algo-card:nth-child(8) { animation-delay: 0.35s; }
+
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.running { animation: pulse 1s infinite; }
+
+/* responsive */
+@media (max-width: 768px) {
+  .algo-layout { grid-template-columns: 1fr; }
+  .algo-sidebar { border-top: 1px solid var(--border); }
+  .cards-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 2rem; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">DAA<span>_</span>VISUALIZER</div>
+  <nav>
+    <button class="active" onclick="showHome()">Home</button>
+    <button onclick="showHome()">Algorithms</button>
+  </nav>
+</header>
+
+<div class="page">
+
+<!-- ══════════════════ HOME PAGE ══════════════════ -->
+<div id="home-page">
+  <div class="hero">
+    <div class="hero-tag">DAA Lab Project</div>
+    <h1>Learn Algorithms <strong>Visually</strong></h1>
+    <p>Step-by-step animated visualizations of 8 classic algorithms — from Greedy to Backtracking. Enter your own data and watch them come alive.</p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">8</div><div class="stat-lbl">Algorithms</div></div>
+    <div class="stat-item"><div class="stat-num">4</div><div class="stat-lbl">Categories</div></div>
+    <div class="stat-item"><div class="stat-num">∞</div><div class="stat-lbl">Custom Inputs</div></div>
+  </div>
+
+  <div class="section-header"><h2>// All Algorithms</h2></div>
+
+  <div class="cards-grid">
+
+    <div class="algo-card" style="--card-color:#7c6af7" onclick="openAlgo('complexity')">
+      <div class="card-num">01</div>
+      <div class="card-icon-row">
+        <div class="card-icon">📊</div>
+        <span class="card-badge">Analysis</span>
+      </div>
+      <div class="card-title">Complexity Analysis</div>
+      <div class="card-desc">Simulate sensor data (temperature & pressure) and compare loop complexities in real time.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(1) → O(n²)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#4ecdc4" onclick="openAlgo('mst')">
+      <div class="card-num">02</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🔗</div>
+        <span class="card-badge">Greedy</span>
+      </div>
+      <div class="card-title">Min Spanning Tree</div>
+      <div class="card-desc">Connect all nodes at minimum total cost using Kruskal's algorithm with visual edge selection.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(E log V)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#ffd93d" onclick="openAlgo('knapsack')">
+      <div class="card-num">03</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🎒</div>
+        <span class="card-badge">Greedy</span>
+      </div>
+      <div class="card-title">Fractional Knapsack</div>
+      <div class="card-desc">Maximize value within a weight limit by greedily picking items by value-to-weight ratio.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(n log n)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#ff6b6b" onclick="openAlgo('activity')">
+      <div class="card-num">04</div>
+      <div class="card-icon-row">
+        <div class="card-icon">📅</div>
+        <span class="card-badge">Greedy</span>
+      </div>
+      <div class="card-title">Activity Selection</div>
+      <div class="card-desc">Select the maximum number of non-overlapping activities from a given schedule.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(n log n)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#a8e063" onclick="openAlgo('subarray')">
+      <div class="card-num">05</div>
+      <div class="card-icon-row">
+        <div class="card-icon">➗</div>
+        <span class="card-badge">Divide & Conquer</span>
+      </div>
+      <div class="card-title">Maximum Subarray</div>
+      <div class="card-desc">Find the contiguous subarray with the largest sum using divide and conquer strategy.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(n log n)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#7c6af7" onclick="openAlgo('lcs')">
+      <div class="card-num">06</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🧬</div>
+        <span class="card-badge">Dynamic Programming</span>
+      </div>
+      <div class="card-title">LCS — DNA Sequences</div>
+      <div class="card-desc">Find the longest common subsequence of two DNA strings with animated DP table.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(m × n)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#4ecdc4" onclick="openAlgo('obst')">
+      <div class="card-num">07</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🌳</div>
+        <span class="card-badge">Dynamic Programming</span>
+      </div>
+      <div class="card-title">OBST</div>
+      <div class="card-desc">Build an Optimal Binary Search Tree that minimizes expected search cost.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(n³)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="algo-card" style="--card-color:#ff6b6b" onclick="openAlgo('hamiltonian')">
+      <div class="card-num">08</div>
+      <div class="card-icon-row">
+        <div class="card-icon">🔄</div>
+        <span class="card-badge">Backtracking</span>
+      </div>
+      <div class="card-title">Hamiltonian Cycle</div>
+      <div class="card-desc">Find a cycle visiting every node exactly once using systematic backtracking exploration.</div>
+      <div class="card-footer">
+        <span class="card-complexity">O(n!)</span>
+        <div class="card-arrow">→</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ ALGO PAGE ══════════════════ -->
+<div id="algo-page">
+  <div class="algo-topbar">
+    <button class="back-btn" onclick="showHome()">← Back</button>
+    <span style="color:var(--border)">|</span>
+    <span class="algo-name" id="algo-title">Algorithm</span>
+    <span class="algo-tag" id="algo-tag-badge"></span>
+  </div>
+
+  <div class="algo-layout">
+    <div class="algo-main">
+
+      <!-- DYNAMIC INPUT AREA -->
+      <div id="algo-inputs" class="input-section"></div>
+
+      <div class="ctrl-row">
+        <button class="ctrl-btn primary" id="run-btn" onclick="runAlgo()">▶ Run</button>
+        <button class="ctrl-btn" onclick="stepAlgo()">Step →</button>
+        <button class="ctrl-btn danger" onclick="resetAlgo()">↺ Reset</button>
+        <div class="speed-group">
+          <label>Speed</label>
+          <input type="range" id="speed-slider" min="1" max="5" value="3" />
+        </div>
+      </div>
+
+      <div class="viz-area">
+        <div class="viz-title" id="viz-title">Visualization</div>
+        <div id="viz-content"></div>
+      </div>
+
+    </div>
+    <div class="algo-sidebar">
+      <div id="sidebar-content"></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- .page -->
+
+<script>
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let currentAlgo = null;
+let animTimer = null;
+let stepQueue = [];
+let stepIdx = 0;
+let logs = [];
+
+function getSpeed() {
+  const v = parseInt(document.getElementById('speed-slider').value);
+  return [800, 600, 400, 250, 100][v - 1];
+}
+
+// ══════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════
+function showHome() {
+  clearInterval(animTimer);
+  document.getElementById('home-page').style.display = 'block';
+  document.getElementById('algo-page').style.display = 'none';
+}
+
+function openAlgo(name) {
+  currentAlgo = name;
+  stepQueue = []; stepIdx = 0; logs = [];
+  document.getElementById('home-page').style.display = 'none';
+  document.getElementById('algo-page').style.display = 'block';
+  setupAlgo(name);
+}
+
+function setupAlgo(name) {
+  const configs = {
+    complexity: { title: 'Complexity Analysis of Loops', tag: 'Analysis', color: '#7c6af7' },
+    mst: { title: 'Minimum Spanning Tree — Kruskal\'s', tag: 'Greedy', color: '#4ecdc4' },
+    knapsack: { title: 'Fractional Knapsack', tag: 'Greedy', color: '#ffd93d' },
+    activity: { title: 'Activity Selection', tag: 'Greedy', color: '#ff6b6b' },
+    subarray: { title: 'Maximum Subarray', tag: 'Divide & Conquer', color: '#a8e063' },
+    lcs: { title: 'LCS — DNA Sequences', tag: 'Dynamic Programming', color: '#7c6af7' },
+    obst: { title: 'Optimal Binary Search Tree', tag: 'Dynamic Programming', color: '#4ecdc4' },
+    hamiltonian: { title: 'Hamiltonian Cycle', tag: 'Backtracking', color: '#ff6b6b' },
+  };
+  const c = configs[name];
+  document.getElementById('algo-title').textContent = c.title;
+  const badge = document.getElementById('algo-tag-badge');
+  badge.textContent = c.tag;
+  badge.style.cssText = `color:${c.color};border:1px solid ${c.color}40;background:${c.color}15;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:3px 10px;border-radius:100px;`;
+  const inputFns = { complexity: setupComplexityInputs, mst: setupMSTInputs, knapsack: setupKnapsackInputs, activity: setupActivityInputs, subarray: setupSubarrayInputs, lcs: setupLCSInputs, obst: setupOBSTInputs, hamiltonian: setupHamiltonianInputs };
+  inputFns[name]();
+  renderSidebar(name, null);
+}
+
+// ══════════════════════════════════════════════════════
+//  RUN / STEP / RESET
+// ══════════════════════════════════════════════════════
+function runAlgo() {
+  clearInterval(animTimer);
+  stepIdx = 0; logs = [];
+  const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian };
+  runners[currentAlgo]();
+  if (stepQueue.length > 0) {
+    animTimer = setInterval(() => {
+      if (stepIdx < stepQueue.length) { stepQueue[stepIdx](); stepIdx++; }
+      else clearInterval(animTimer);
+    }, getSpeed());
+  }
+}
+function stepAlgo() {
+  clearInterval(animTimer);
+  if (stepIdx === 0 && stepQueue.length === 0) {
+    const runners = { complexity: runComplexity, mst: runMST, knapsack: runKnapsack, activity: runActivity, subarray: runSubarray, lcs: runLCS, obst: runOBST, hamiltonian: runHamiltonian };
+    runners[currentAlgo]();
+  }
+  if (stepIdx < stepQueue.length) { stepQueue[stepIdx](); stepIdx++; }
+}
+function resetAlgo() {
+  clearInterval(animTimer);
+  stepQueue = []; stepIdx = 0; logs = [];
+  openAlgo(currentAlgo);
+}
+
+// ══════════════════════════════════════════════════════
+//  SIDEBAR RENDERER
+// ══════════════════════════════════════════════════════
+function renderSidebar(algo, result) {
+  const complexities = {
+    complexity: { time: 'O(1) to O(n²)', space: 'O(1)', category: 'Analysis' },
+    mst: { time: 'O(E log V)', space: 'O(V + E)', category: 'Greedy' },
+    knapsack: { time: 'O(n log n)', space: 'O(1)', category: 'Greedy' },
+    activity: { time: 'O(n log n)', space: 'O(n)', category: 'Greedy' },
+    subarray: { time: 'O(n log n)', space: 'O(log n)', category: 'Divide & Conquer' },
+    lcs: { time: 'O(m × n)', space: 'O(m × n)', category: 'Dynamic Programming' },
+    obst: { time: 'O(n³)', space: 'O(n²)', category: 'Dynamic Programming' },
+    hamiltonian: { time: 'O(n!)', space: 'O(n)', category: 'Backtracking' },
+  };
+  const c = complexities[algo];
+  const resultHTML = result ? result : '<div style="color:var(--text3);font-size:13px;margin-top:4px;">Run the algorithm to see results.</div>';
+  document.getElementById('sidebar-content').innerHTML = `
+    <div class="sidebar-section">
+      <div class="sidebar-title">Result</div>
+      ${resultHTML}
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Complexity</div>
+      <div class="info-row"><span class="info-key">Time</span><span class="info-val">${c.time}</span></div>
+      <div class="info-row"><span class="info-key">Space</span><span class="info-val">${c.space}</span></div>
+      <div class="info-row"><span class="info-key">Category</span><span class="info-val">${c.category}</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-title">Step Log</div>
+      <div class="step-log" id="step-log"><div style="color:var(--text3);font-size:11px;font-family:var(--mono)">Waiting to run...</div></div>
+    </div>`;
+}
+function addLog(msg) {
+  logs.push(msg);
+  const el = document.getElementById('step-log');
+  if (el) { el.innerHTML = logs.map(l => `<div class="step-item">${l}</div>`).join(''); el.scrollTop = el.scrollHeight; }
+}
+
+// ══════════════════════════════════════════════════════
+//  1. COMPLEXITY ANALYSIS
+// ══════════════════════════════════════════════════════
+function setupComplexityInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div class="input-label">Number of sensor readings (n)</div>
+    <input type="number" class="txt-input" id="cx-n" value="10" min="2" max="50" style="max-width:140px;" />`;
+  document.getElementById('viz-title').textContent = 'Sensor Data — Complexity Comparison Chart';
+  document.getElementById('viz-content').innerHTML = '<canvas id="complexity-canvas" height="260"></canvas>';
+  renderSidebar('complexity', null);
+}
+function runComplexity() {
+  stepQueue = [];
+  const n = parseInt(document.getElementById('cx-n').value) || 10;
+  const temps = Array.from({length: n}, () => +(20 + Math.random()*15).toFixed(1));
+  const press = Array.from({length: n}, () => +(1000 + Math.random()*50).toFixed(1));
+  const ns = Array.from({length: n}, (_,i) => i+1);
+  const o1 = ns.map(() => 1);
+  const on = ns.map(x => x);
+  const on2 = ns.map(x => x*x);
+  const onlogn = ns.map(x => +(x * Math.log2(x+1)).toFixed(1));
+  stepQueue.push(() => {
+    addLog(`n = ${n} sensor readings generated`);
+    addLog(`Temp range: ${Math.min(...temps).toFixed(1)}°C – ${Math.max(...temps).toFixed(1)}°C`);
+    addLog(`Pressure range: ${Math.min(...press).toFixed(1)} – ${Math.max(...press).toFixed(1)} Pa`);
+    renderComplexityChart(ns, o1, on, onlogn, on2);
+    renderSidebar('complexity', `<div class="result-big">${n}</div><div class="result-sub">Sensor Readings</div><div class="result-string">Max Temp: ${Math.max(...temps).toFixed(1)}°C</div>`);
+    addLog(`O(1): constant — 1 op regardless of n`);
+    addLog(`O(n): linear — ${n} ops`);
+    addLog(`O(n log n): ${onlogn[n-1]} ops`);
+    addLog(`O(n²): quadratic — ${n*n} ops`);
+  });
+}
+function renderComplexityChart(ns, o1, on, onlogn, on2) {
+  const canvas = document.getElementById('complexity-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth;
+  canvas.height = 260;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const pad = { t: 20, r: 20, b: 40, l: 50 };
+  const cw = W - pad.l - pad.r, ch = H - pad.t - pad.b;
+  const maxY = Math.max(...on2);
+  const scaleX = i => pad.l + (i / (ns.length - 1)) * cw;
+  const scaleY = v => pad.t + ch - (v / maxY) * ch;
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.t + (ch / 4) * i;
+    ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + cw, y); ctx.stroke();
+    ctx.fillStyle = '#555566'; ctx.font = '10px Space Mono';
+    ctx.fillText(Math.round(maxY - (maxY/4)*i), 4, y+4);
+  }
+  const series = [
+    { data: o1, color: '#4ecdc4', label: 'O(1)' },
+    { data: on, color: '#ffd93d', label: 'O(n)' },
+    { data: onlogn, color: '#7c6af7', label: 'O(n log n)' },
+    { data: on2, color: '#ff6b6b', label: 'O(n²)' },
+  ];
+  series.forEach(s => {
+    ctx.strokeStyle = s.color; ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    s.data.forEach((v, i) => { const x = scaleX(i), y = scaleY(v); i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y); });
+    ctx.stroke();
+    ctx.fillStyle = s.color; ctx.font = '11px Space Mono';
+    ctx.fillText(s.label, W - pad.r - 60, scaleY(s.data[s.data.length-1]) + 4);
+  });
+  ctx.strokeStyle = '#2a2a3a'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, pad.t + ch); ctx.lineTo(pad.l + cw, pad.t + ch); ctx.stroke();
+  ns.forEach((v, i) => {
+    if (i % Math.max(1, Math.floor(ns.length/5)) === 0) {
+      ctx.fillStyle = '#555566'; ctx.font = '10px Space Mono';
+      ctx.fillText(v, scaleX(i) - 4, H - 8);
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  2. MST — KRUSKAL'S
+// ══════════════════════════════════════════════════════
+const MST_NODES = [
+  {id:0,x:0.15,y:0.3,label:'A'},{id:1,x:0.4,y:0.1,label:'B'},
+  {id:2,x:0.75,y:0.2,label:'C'},{id:3,x:0.85,y:0.6,label:'D'},
+  {id:4,x:0.5,y:0.75,label:'E'},{id:5,x:0.15,y:0.75,label:'F'}
+];
+const MST_EDGES = [
+  {u:0,v:1,w:4},{u:0,v:5,w:2},{u:1,v:2,w:6},{u:1,v:4,w:5},
+  {u:2,v:3,w:3},{u:3,v:4,w:7},{u:4,v:5,w:1},{u:1,v:5,w:8},{u:2,v:4,w:9}
+];
+let mstSelected = [];
+function setupMSTInputs() {
+  document.getElementById('algo-inputs').innerHTML = `<div style="font-size:13px;color:var(--text3);font-family:var(--mono);">Graph has 6 nodes (A–F) and 9 edges. Kruskal's will find the MST.</div>`;
+  document.getElementById('viz-title').textContent = 'Graph — Kruskal\'s MST Algorithm';
+  document.getElementById('viz-content').innerHTML = '<canvas id="mst-canvas" height="300"></canvas>';
+  mstSelected = [];
+  renderMSTCanvas([], []);
+  renderSidebar('mst', null);
+}
+function drawMST(selectedEdges, currentEdge) {
+  const canvas = document.getElementById('mst-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth; canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+  const nx = n => n.x * W, ny = n => n.y * H;
+  MST_EDGES.forEach(e => {
+    const u = MST_NODES[e.u], v = MST_NODES[e.v];
+    const isSel = selectedEdges.some(s => s.u===e.u && s.v===e.v);
+    const isCur = currentEdge && currentEdge.u===e.u && currentEdge.v===e.v;
+    ctx.strokeStyle = isSel ? '#4ecdc4' : isCur ? '#ffd93d' : '#2a2a3a';
+    ctx.lineWidth = isSel ? 3 : isCur ? 2 : 1;
+    ctx.beginPath(); ctx.moveTo(nx(u), ny(u)); ctx.lineTo(nx(v), ny(v)); ctx.stroke();
+    const mx = (nx(u)+nx(v))/2, my = (ny(u)+ny(v))/2;
+    ctx.fillStyle = isSel ? '#4ecdc4' : '#555566';
+    ctx.font = '11px Space Mono';
+    ctx.fillText(e.w, mx-6, my-4);
+  });
+  MST_NODES.forEach(n => {
+    ctx.fillStyle = '#12121a'; ctx.beginPath(); ctx.arc(nx(n), ny(n), 18, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = '#7c6af7'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.fillStyle = '#f0f0f8'; ctx.font = 'bold 13px Space Mono'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(n.label, nx(n), ny(n));
+  });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+function renderMSTCanvas(sel, cur) { drawMST(sel, cur); }
+function runMST() {
+  mstSelected = [];
+  stepQueue = [];
+  const sorted = [...MST_EDGES].sort((a,b) => a.w - b.w);
+  const parent = MST_NODES.map((_,i) => i);
+  function find(x) { return parent[x] === x ? x : (parent[x] = find(parent[x])); }
+  function union(a,b) { parent[find(a)] = find(b); }
+  const sel = [];
+  sorted.forEach(e => {
+    const eCopy = {...e};
+    stepQueue.push(() => {
+      const fa = find(e.u), fb = find(e.v);
+      if (fa !== fb) {
+        sel.push(eCopy); union(e.u, e.v);
+        addLog(`Edge ${MST_NODES[e.u].label}-${MST_NODES[e.v].label} (w=${e.w}) → ADDED`);
+      } else {
+        addLog(`Edge ${MST_NODES[e.u].label}-${MST_NODES[e.v].label} (w=${e.w}) → skipped (cycle)`);
+      }
+      drawMST([...sel], eCopy);
+      const totalW = sel.reduce((s,x)=>s+x.w,0);
+      renderSidebar('mst', `<div class="result-big">${totalW}</div><div class="result-sub">Total MST Cost</div><div class="result-string">${sel.map(x=>MST_NODES[x.u].label+'-'+MST_NODES[x.v].label).join(', ')}</div>`);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  3. FRACTIONAL KNAPSACK
+// ══════════════════════════════════════════════════════
+function setupKnapsackInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div class="input-row2">
+      <div><div class="input-label">Capacity (kg)</div>
+      <input type="number" class="txt-input" id="ks-cap" value="50" min="1" /></div>
+      <div><div class="input-label">Items (name,weight,value — one per line)</div>
+      <textarea class="txt-input" id="ks-items" rows="4" style="resize:vertical">Gold,10,60
+Silver,20,100
+Bronze,30,120
+Diamond,5,80
+Platinum,15,90</textarea></div>
+    </div>`;
+  document.getElementById('viz-title').textContent = 'Fractional Knapsack — Greedy Selection';
+  document.getElementById('viz-content').innerHTML = '<div class="knapsack-items" id="ks-viz"></div>';
+  renderSidebar('knapsack', null);
+}
+function runKnapsack() {
+  stepQueue = [];
+  const cap = parseFloat(document.getElementById('ks-cap').value) || 50;
+  const lines = document.getElementById('ks-items').value.trim().split('\n');
+  const items = lines.map(l => { const p = l.split(','); return { name: p[0]||'Item', w: parseFloat(p[1])||1, v: parseFloat(p[2])||1 }; });
+  items.forEach(i => i.ratio = i.v / i.w);
+  items.sort((a,b) => b.ratio - a.ratio);
+  const viz = document.getElementById('ks-viz');
+  viz.innerHTML = items.map((it,i) => `
+    <div class="ks-item" id="ks-${i}">
+      <div class="ks-label">${it.name}</div>
+      <div style="font-size:11px;color:var(--text3);min-width:70px;font-family:var(--mono)">${it.w}kg / ₹${it.v}</div>
+      <div class="ks-bar-wrap"><div class="ks-bar" id="ks-bar-${i}" style="width:0%"></div></div>
+      <div class="ks-ratio" id="ks-rat-${i}">₹${it.ratio.toFixed(1)}/kg</div>
+    </div>`).join('');
+  let rem = cap, totalVal = 0;
+  items.forEach((it, i) => {
+    stepQueue.push(() => {
+      const el = document.getElementById(`ks-${i}`);
+      const bar = document.getElementById(`ks-bar-${i}`);
+      if (rem <= 0) { addLog(`${it.name}: capacity full`); return; }
+      if (it.w <= rem) {
+        rem -= it.w; totalVal += it.v;
+        if (el) el.className = 'ks-item selected';
+        if (bar) { bar.style.width = '100%'; bar.style.background = '#4ecdc4'; }
+        addLog(`${it.name}: take all ${it.w}kg → +₹${it.v}`);
+      } else {
+        const frac = rem / it.w; totalVal += frac * it.v;
+        if (el) el.className = 'ks-item partial';
+        if (bar) { bar.style.width = (frac*100).toFixed(0)+'%'; bar.style.background = '#ffd93d'; }
+        addLog(`${it.name}: take ${(frac*100).toFixed(0)}% (${rem}kg) → +₹${(frac*it.v).toFixed(1)}`);
+        rem = 0;
+      }
+      renderSidebar('knapsack', `<div class="result-big">₹${totalVal.toFixed(1)}</div><div class="result-sub">Total Value</div><div class="result-string">Remaining: ${rem.toFixed(1)} kg</div>`);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  4. ACTIVITY SELECTION
+// ══════════════════════════════════════════════════════
+function setupActivityInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div><div class="input-label">Activities (name,start,end — one per line)</div>
+    <textarea class="txt-input" id="act-items" rows="4" style="resize:vertical">A1,1,3
+A2,0,2
+A3,3,5
+A4,5,9
+A5,6,8
+A6,8,12
+A7,2,4</textarea></div>`;
+  document.getElementById('viz-title').textContent = 'Activity Selection — Timeline View';
+  document.getElementById('viz-content').innerHTML = `<div class="timeline-wrap"><div class="timeline" id="act-timeline"></div></div>`;
+  renderSidebar('activity', null);
+}
+function runActivity() {
+  stepQueue = [];
+  const lines = document.getElementById('act-items').value.trim().split('\n');
+  const acts = lines.map(l => { const p=l.split(','); return { name:p[0], s:+p[1], e:+p[2] }; });
+  acts.sort((a,b) => a.e-b.e);
+  const maxT = Math.max(...acts.map(a=>a.e));
+  const colors = ['#7c6af7','#4ecdc4','#ff6b6b','#ffd93d','#a8e063','#f7b2b7','#b5ead7'];
+  const tl = document.getElementById('act-timeline');
+  const TH = 200, barH = 28, topPad = 20;
+  const pct = v => (v/maxT)*100;
+  tl.innerHTML = `<div class="t-axis"></div>`;
+  for (let t=0;t<=maxT;t+=Math.ceil(maxT/8)) {
+    tl.innerHTML += `<div class="t-label" style="left:${pct(t)}%">${t}</div>`;
+  }
+  acts.forEach((a,i) => {
+    const row = i % 5;
+    tl.innerHTML += `<div class="activity-bar" id="act-${i}" style="left:${pct(a.s)}%;width:${pct(a.e-a.s)}%;top:${topPad+row*32}px;background:${colors[i%colors.length]}22;border:1px solid ${colors[i%colors.length]};color:${colors[i%colors.length]}">${a.name}</div>`;
+  });
+  const selected = []; let lastEnd = -1;
+  acts.forEach((a,i) => {
+    stepQueue.push(() => {
+      const el = document.getElementById(`act-${i}`);
+      if (a.s >= lastEnd) {
+        selected.push(a); lastEnd = a.e;
+        if (el) { el.style.opacity = '1'; el.style.borderWidth = '2px'; el.style.fontWeight = '700'; }
+        addLog(`${a.name} [${a.s}-${a.e}] → SELECTED`);
+      } else {
+        if (el) { el.style.opacity = '0.25'; }
+        addLog(`${a.name} [${a.s}-${a.e}] → skipped (overlaps)`);
+      }
+      renderSidebar('activity', `<div class="result-big">${selected.length}</div><div class="result-sub">Activities Selected</div><div class="result-string">${selected.map(x=>x.name).join(', ')}</div>`);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  5. MAXIMUM SUBARRAY
+// ══════════════════════════════════════════════════════
+function setupSubarrayInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div><div class="input-label">Array (comma-separated integers)</div>
+    <input type="text" class="txt-input" id="sub-arr" value="-2,1,-3,4,-1,2,1,-5,4" /></div>`;
+  document.getElementById('viz-title').textContent = 'Maximum Subarray — Divide & Conquer';
+  document.getElementById('viz-content').innerHTML = `<div class="array-row" id="sub-viz"></div><div id="sub-info" style="margin-top:1rem;font-family:var(--mono);font-size:13px;color:var(--text3)"></div>`;
+  renderSidebar('subarray', null);
+}
+function runSubarray() {
+  stepQueue = [];
+  const arr = document.getElementById('sub-arr').value.split(',').map(Number);
+  const viz = document.getElementById('sub-viz');
+  viz.innerHTML = arr.map((v,i) => `<div class="arr-cell ${v<0?'neg':''}" id="sub-${i}">${v}</div>`).join('');
+  let maxSum = -Infinity, start = 0, end = 0;
+  let curSum = 0, curStart = 0;
+  arr.forEach((v, i) => {
+    stepQueue.push(() => {
+      document.querySelectorAll('.arr-cell').forEach(el => el.classList.remove('current'));
+      document.getElementById(`sub-${i}`)?.classList.add('current');
+      curSum += v;
+      if (curSum > maxSum) { maxSum = curSum; start = curStart; end = i; }
+      if (curSum < 0) { curSum = 0; curStart = i+1; }
+      document.querySelectorAll('.arr-cell').forEach((el,j) => { el.classList.remove('max-sub'); if (j>=start && j<=end) el.classList.add('max-sub'); });
+      document.getElementById('sub-info').textContent = `Current index: ${i} | Current sum: ${curSum} | Max so far: ${maxSum}`;
+      addLog(`arr[${i}]=${v} → curSum=${curSum}, max=${maxSum}`);
+      renderSidebar('subarray', `<div class="result-big">${maxSum}</div><div class="result-sub">Maximum Sum</div><div class="result-string">[${arr.slice(start,end+1).join(', ')}]</div>`);
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  6. LCS
+// ══════════════════════════════════════════════════════
+function setupLCSInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div class="input-row2">
+      <div><div class="input-label">DNA Sequence 1</div><input type="text" class="txt-input dna-input" id="lcs-s1" value="AGGTAB" /></div>
+      <div><div class="input-label">DNA Sequence 2</div><input type="text" class="txt-input dna-input" id="lcs-s2" value="GXTXAYB" /></div>
+    </div>`;
+  document.getElementById('viz-title').textContent = 'LCS — Dynamic Programming Table';
+  document.getElementById('viz-content').innerHTML = `<div style="overflow-x:auto"><table class="lcs-table" id="lcs-table"></table></div><div class="seq-row" id="lcs-s1-row" style="margin-top:1rem"></div><div class="seq-row" id="lcs-s2-row" style="margin-top:6px"></div>`;
+  renderSidebar('lcs', null);
+}
+function runLCS() {
+  stepQueue = [];
+  const s1 = document.getElementById('lcs-s1').value.trim().toUpperCase();
+  const s2 = document.getElementById('lcs-s2').value.trim().toUpperCase();
+  const m = s1.length, n = s2.length;
+  const dp = Array.from({length:m+1}, () => Array(n+1).fill(0));
+  const tbl = document.getElementById('lcs-table');
+  let html = '<tr><th></th><th></th>' + [...s2].map(c=>`<th>${c}</th>`).join('') + '</tr>';
+  html += '<tr><th></th>' + Array(n+1).fill('<td id="lcs-0-'+0+'">0</td>').map((_,j)=>`<td id="lcs-0-${j}">0</td>`).join('') + '</tr>';
+  for (let i=1;i<=m;i++) html += `<tr><th>${s1[i-1]}</th>` + Array(n+1).fill(0).map((_,j)=>`<td id="lcs-${i}-${j}">0</td>`).join('') + '</tr>';
+  tbl.innerHTML = html;
+  document.getElementById('lcs-s1-row').innerHTML = [...s1].map((c,i)=>`<div class="seq-char" id="lcs-c1-${i}">${c}</div>`).join('');
+  document.getElementById('lcs-s2-row').innerHTML = [...s2].map((c,i)=>`<div class="seq-char" id="lcs-c2-${i}">${c}</div>`).join('');
+  for (let i=1;i<=m;i++) for (let j=1;j<=n;j++) {
+    const ii=i,jj=j;
+    stepQueue.push(() => {
+      if (s1[ii-1]===s2[jj-1]) { dp[ii][jj]=dp[ii-1][jj-1]+1; addLog(`dp[${ii}][${jj}]: '${s1[ii-1]}'='${s2[jj-1]}' → ${dp[ii][jj]}`); }
+      else { dp[ii][jj]=Math.max(dp[ii-1][jj],dp[ii][jj-1]); addLog(`dp[${ii}][${jj}]: max(${dp[ii-1][jj]},${dp[ii][jj-1]}) = ${dp[ii][jj]}`); }
+      const el = document.getElementById(`lcs-${ii}-${jj}`);
+      if (el) { el.textContent = dp[ii][jj]; el.className = dp[ii][jj]>0?'active':''; }
+      if (ii===m && jj===n) {
+        let lcs='', a=m, b=n;
+        while(a>0&&b>0){if(s1[a-1]===s2[b-1]){lcs=s1[a-1]+lcs;a--;b--;}else if(dp[a-1][b]>dp[a][b-1])a--;else b--;}
+        document.getElementById(`lcs-${ii}-${jj}`).className='path';
+        [...lcs].forEach(c => {
+          [...s1].forEach((ch,i)=>{if(ch===c)document.getElementById(`lcs-c1-${i}`)?.classList.add('match');});
+          [...s2].forEach((ch,i)=>{if(ch===c)document.getElementById(`lcs-c2-${i}`)?.classList.add('match');});
+        });
+        renderSidebar('lcs', `<div class="result-big">${dp[m][n]}</div><div class="result-sub">LCS Length</div><div class="result-string">${lcs}</div>`);
+        addLog(`LCS = "${lcs}" (length ${dp[m][n]})`);
+      }
+    });
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  7. OBST
+// ══════════════════════════════════════════════════════
+function setupOBSTInputs() {
+  document.getElementById('algo-inputs').innerHTML = `
+    <div class="input-row2">
+      <div><div class="input-label">Keys (comma-separated)</div><input type="text" class="txt-input" id="obst-keys" value="10,20,30,40" /></div>
+      <div><div class="input-label">Probabilities (same count)</div><input type="text" class="txt-input" id="obst-probs" value="0.1,0.3,0.4,0.2" /></div>
+    </div>`;
+  document.getElementById('viz-title').textContent = 'OBST — Cost Table & Optimal Tree';
+  document.getElementById('viz-content').innerHTML = '<canvas id="obst-canvas" height="300"></canvas>';
+  renderSidebar('obst', null);
+}
+function runOBST() {
+  stepQueue = [];
+  const keys = document.getElementById('obst-keys').value.split(',').map(Number);
+  const probs = document.getElementById('obst-probs').value.split(',').map(Number);
+  const n = keys.length;
+  const cost = Array.from({length:n+2},()=>Array(n+1).fill(0));
+  const w = Array.from({length:n+2},()=>Array(n+1).fill(0));
+  const root = Array.from({length:n+1},()=>Array(n+1).fill(0));
+  for(let i=1;i<=n;i++){w[i][i-1]=0;cost[i][i-1]=0;}
+  for(let i=1;i<=n;i++){w[i][i]=probs[i-1];cost[i][i]=probs[i-1];root[i][i]=i;}
+  for(let len=2;len<=n;len++){
+    for(let i=1;i<=n-len+1;i++){
+      const j=i+len-1;
+      w[i][j]=w[i][j-1]+probs[j-1];
+      cost[i][j]=Infinity;
+      for(let r=i;r<=j;r++){
+        const c=(r>i?cost[i][r-1]:0)+(r<j?cost[r+1][j]:0)+w[i][j];
+        if(c<cost[i][j]){cost[i][j]=c;root[i][j]=r;}
+      }
+    }
+  }
+  stepQueue.push(() => {
+    addLog(`Keys: [${keys.join(', ')}]`);
+    addLog(`Probs: [${probs.join(', ')}]`);
+    addLog(`Optimal cost: ${cost[1][n].toFixed(3)}`);
+    addLog(`Root of tree: key ${keys[root[1][n]-1]}`);
+    drawOBST(keys, root, cost[1][n]);
+    renderSidebar('obst', `<div class="result-big">${cost[1][n].toFixed(3)}</div><div class="result-sub">Min Expected Cost</div><div class="result-string">Root: ${keys[root[1][n]-1]}</div>`);
+  });
+}
+function drawOBST(keys, root, totalCost) {
+  const canvas = document.getElementById('obst-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth; canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const n = keys.length;
+  function draw(lo,hi,x,y,dx) {
+    if(lo>hi)return;
+    const r = root[lo][hi]-1;
+    ctx.strokeStyle='#2a2a3a'; ctx.lineWidth=1;
+    if(lo<r){
+      const lx=x-dx,ly=y+70;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(lx,ly);ctx.stroke();
+      draw(lo,r-1,lx,ly,dx/2);
+    }
+    if(r<hi){
+      const rx=x+dx,ry=y+70;
+      ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(rx,ry);ctx.stroke();
+      draw(r+1,hi,rx,ry,dx/2);
+    }
+    ctx.fillStyle='#12121a';ctx.beginPath();ctx.arc(x,y,20,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle='#7c6af7';ctx.lineWidth=1.5;ctx.stroke();
+    ctx.fillStyle='#f0f0f8';ctx.font='bold 12px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(keys[r],x,y);
+  }
+  draw(1,n,canvas.width/2,40,canvas.width/5);
+  ctx.textAlign='left';
+}
+
+// ══════════════════════════════════════════════════════
+//  8. HAMILTONIAN CYCLE
+// ══════════════════════════════════════════════════════
+const HAM_NODES = [{x:0.5,y:0.12},{x:0.85,y:0.38},{x:0.72,y:0.82},{x:0.28,y:0.82},{x:0.15,y:0.38}];
+const HAM_ADJ = [[0,1,0,1,1],[1,0,1,0,1],[0,1,0,1,0],[1,0,1,0,1],[1,1,0,1,0]];
+function setupHamiltonianInputs() {
+  document.getElementById('algo-inputs').innerHTML = `<div style="font-size:13px;color:var(--text3);font-family:var(--mono)">Pentagon graph (5 nodes). Backtracking will find a Hamiltonian Cycle if one exists.</div>`;
+  document.getElementById('viz-title').textContent = 'Hamiltonian Cycle — Backtracking';
+  document.getElementById('viz-content').innerHTML = '<canvas id="ham-canvas" height="300"></canvas><div class="ham-info" id="ham-info"></div>';
+  drawHamGraph([], -1);
+  renderSidebar('hamiltonian', null);
+}
+function drawHamGraph(path, current) {
+  const canvas = document.getElementById('ham-canvas');
+  if (!canvas) return;
+  canvas.width = canvas.parentElement.offsetWidth; canvas.height = 280;
+  const ctx = canvas.getContext('2d');
+  const W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const nx=n=>n.x*W*0.7+W*0.15, ny=n=>n.y*H*0.8+H*0.08;
+  HAM_ADJ.forEach((row,i)=>row.forEach((v,j)=>{
+    if(v&&i<j){
+      ctx.strokeStyle='#2a2a3a';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(nx(HAM_NODES[i]),ny(HAM_NODES[i]));ctx.lineTo(nx(HAM_NODES[j]),ny(HAM_NODES[j]));ctx.stroke();
+    }
+  }));
+  for(let i=0;i<path.length-1;i++){
+    const a=HAM_NODES[path[i]],b=HAM_NODES[path[i+1]];
+    ctx.strokeStyle='#4ecdc4';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(nx(a),ny(a));ctx.lineTo(nx(b),ny(b));ctx.stroke();
+  }
+  if(path.length>1&&HAM_ADJ[path[path.length-1]][path[0]]){
+    const a=HAM_NODES[path[path.length-1]],b=HAM_NODES[path[0]];
+    ctx.strokeStyle='#ffd93d';ctx.lineWidth=3;ctx.setLineDash([6,4]);
+    ctx.beginPath();ctx.moveTo(nx(a),ny(a));ctx.lineTo(nx(b),ny(b));ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  HAM_NODES.forEach((n,i)=>{
+    const inPath=path.includes(i), isCur=i===current;
+    ctx.fillStyle=inPath?'#1a2a26':isCur?'#2a2a1a':'#12121a';
+    ctx.beginPath();ctx.arc(nx(n),ny(n),20,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=inPath?'#4ecdc4':isCur?'#ffd93d':'#2a2a3a';ctx.lineWidth=2;ctx.stroke();
+    ctx.fillStyle='#f0f0f8';ctx.font='bold 13px Space Mono';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(i,nx(n),ny(n));
+  });
+  ctx.textAlign='left';
+}
+function runHamiltonian() {
+  stepQueue=[];
+  const n=HAM_NODES.length;
+  const path=[0];
+  const visited=Array(n).fill(false);
+  visited[0]=true;
+  function solve(pos) {
+    if(pos===n){
+      if(HAM_ADJ[path[pos-1]][path[0]]){
+        const snap=[...path];
+        stepQueue.push(()=>{
+          drawHamGraph(snap,snap[0]);
+          document.getElementById('ham-info').innerHTML=`<div class="ham-badge found">Cycle Found! 0→${snap.slice(1).join('→')}→0</div>`;
+          addLog(`CYCLE FOUND: 0→${snap.slice(1).join('→')}→0`);
+          renderSidebar('hamiltonian',`<div class="result-big">✓</div><div class="result-sub">Hamiltonian Cycle Found</div><div class="result-string">0 → ${snap.slice(1).join(' → ')} → 0</div>`);
+        });
+        return true;
+      }
+      return false;
+    }
+    for(let v=1;v<n;v++){
+      if(!visited[v]&&HAM_ADJ[path[pos-1]][v]){
+        path.push(v);visited[v]=true;
+        const snap=[...path];
+        stepQueue.push(()=>{drawHamGraph(snap,v);addLog(`Try node ${v} at pos ${pos}`);});
+        if(solve(pos+1))return true;
+        path.pop();visited[v]=false;
+        const snap2=[...path];
+        stepQueue.push(()=>{drawHamGraph(snap2,-1);addLog(`Backtrack from ${v}`);});
+      }
+    }
+    return false;
+  }
+  solve(1);
+}
+</script>
+</body>
+</html>
