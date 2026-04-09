@@ -22,6 +22,47 @@ import * as hamiltonian from "./algorithms/hamiltonian.js";
 import * as graphcoloring from "./algorithms/graphcoloring.js";
 
 const RUNNER_CONTROLS_BOUND = "__daaRunnerControlsBound";
+const CLICK_ONLY_ACTIONS = new Set(["run", "step", "reset"]);
+const CLICK_OR_CHANGE_ACTIONS = new Set(["mst-switch-case", "gc-switch-preset"]);
+
+const delegatedActionTickByNode = new WeakMap();
+let delegatedActionTick = 0;
+let delegatedActionTickScheduled = false;
+
+function getDelegatedActionTick() {
+  if (!delegatedActionTickScheduled) {
+    delegatedActionTickScheduled = true;
+    queueMicrotask(() => {
+      delegatedActionTick += 1;
+      delegatedActionTickScheduled = false;
+    });
+  }
+
+  return delegatedActionTick;
+}
+
+function isDuplicateDelegatedAction(actionNode, action) {
+  const tick = getDelegatedActionTick();
+  const previous = delegatedActionTickByNode.get(actionNode);
+  if (previous && previous.action === action && previous.tick === tick) {
+    return true;
+  }
+
+  delegatedActionTickByNode.set(actionNode, { action, tick });
+  return false;
+}
+
+function allowsDelegatedEvent(action, eventType) {
+  if (CLICK_ONLY_ACTIONS.has(action)) {
+    return eventType === "click";
+  }
+
+  if (CLICK_OR_CHANGE_ACTIONS.has(action)) {
+    return eventType === "click" || eventType === "change";
+  }
+
+  return eventType === "click";
+}
 
 function normalizeAlgoSlug(slug) {
   if (!slug) {
@@ -157,6 +198,11 @@ function onAfterSwap(evt) {
 }
 
 function onDelegatedAction(evt) {
+  const eventType = evt.type;
+  if (eventType !== "click" && eventType !== "change") {
+    return;
+  }
+
   const target = evt.target;
   if (!(target instanceof Element)) {
     return;
@@ -173,11 +219,19 @@ function onDelegatedAction(evt) {
   }
 
   const action = actionNode.dataset.action;
-  if (evt.type === "click") {
+  if (!action || !allowsDelegatedEvent(action, eventType)) {
+    return;
+  }
+
+  if (CLICK_OR_CHANGE_ACTIONS.has(action) && isDuplicateDelegatedAction(actionNode, action)) {
+    return;
+  }
+
+  if (eventType === "click") {
     evt.preventDefault();
   }
 
-  if (action !== "run" && action !== "step" && action !== "reset") {
+  if (!CLICK_ONLY_ACTIONS.has(action)) {
     const handled = dispatchAlgoAction(actionNode);
     if (handled) {
       return;
