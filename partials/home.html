@@ -1,0 +1,84 @@
+<section id="home-page">
+  <div class="hero">
+    <div class="hero-tag">DAA Lab Project</div>
+    <h1>Learn Algorithms <strong>Visually</strong></h1>
+    <p>
+      Step-by-step visualizations of classic algorithms. Enter your own data,
+      then load each algorithm workspace in-place.
+    </p>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat-item"><div class="stat-num">8</div><div class="stat-lbl">Algorithms</div></div>
+    <div class="stat-item"><div class="stat-num">4</div><div class="stat-lbl">Categories</div></div>
+    <div class="stat-item"><div class="stat-num">Many</div><div class="stat-lbl">Custom Inputs</div></div>
+  </div>
+
+  <div class="section-header"><h2>// All Algorithms</h2></div>
+
+  <div class="cards-grid">
+    <button class="algo-card" style="--card-color:#7c6af7" hx-get="partials/algo-layout.html?algo=complexity" hx-target="#app" hx-push-url="true">
+      <div class="card-num">01</div>
+      <div class="card-icon-row"><div class="card-icon">AN</div><span class="card-badge">Analysis</span></div>
+      <div class="card-title">Complexity Analysis</div>
+      <div class="card-desc">Compare loop complexity behavior with simple data samples.</div>
+      <div class="card-footer"><span class="card-complexity">O(1) to O(n^2)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#4ecdc4" hx-get="partials/algo-layout.html?algo=mst" hx-target="#app" hx-push-url="true">
+      <div class="card-num">02</div>
+      <div class="card-icon-row"><div class="card-icon">GR</div><span class="card-badge">Greedy</span></div>
+      <div class="card-title">Minimum Spanning Tree</div>
+      <div class="card-desc">Visual edge selection with Kruskal's algorithm.</div>
+      <div class="card-footer"><span class="card-complexity">O(E log V)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#ffd93d" hx-get="partials/algo-layout.html?algo=knapsack" hx-target="#app" hx-push-url="true">
+      <div class="card-num">03</div>
+      <div class="card-icon-row"><div class="card-icon">KN</div><span class="card-badge">Greedy</span></div>
+      <div class="card-title">Fractional Knapsack</div>
+      <div class="card-desc">Maximize value under weight constraints.</div>
+      <div class="card-footer"><span class="card-complexity">O(n log n)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#ff6b6b" hx-get="partials/algo-layout.html?algo=activity" hx-target="#app" hx-push-url="true">
+      <div class="card-num">04</div>
+      <div class="card-icon-row"><div class="card-icon">AC</div><span class="card-badge">Greedy</span></div>
+      <div class="card-title">Activity Selection</div>
+      <div class="card-desc">Choose the maximum compatible activity set.</div>
+      <div class="card-footer"><span class="card-complexity">O(n log n)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#a8e063" hx-get="partials/algo-layout.html?algo=subarray" hx-target="#app" hx-push-url="true">
+      <div class="card-num">05</div>
+      <div class="card-icon-row"><div class="card-icon">MS</div><span class="card-badge">Divide &amp; Conquer</span></div>
+      <div class="card-title">Maximum Subarray</div>
+      <div class="card-desc">Find the highest-sum contiguous subarray.</div>
+      <div class="card-footer"><span class="card-complexity">O(n log n)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#7c6af7" hx-get="partials/algo-layout.html?algo=lcs" hx-target="#app" hx-push-url="true">
+      <div class="card-num">06</div>
+      <div class="card-icon-row"><div class="card-icon">LC</div><span class="card-badge">Dynamic Programming</span></div>
+      <div class="card-title">LCS</div>
+      <div class="card-desc">Compute longest common subsequence visually.</div>
+      <div class="card-footer"><span class="card-complexity">O(m * n)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#4ecdc4" hx-get="partials/algo-layout.html?algo=obst" hx-target="#app" hx-push-url="true">
+      <div class="card-num">07</div>
+      <div class="card-icon-row"><div class="card-icon">OB</div><span class="card-badge">Dynamic Programming</span></div>
+      <div class="card-title">OBST</div>
+      <div class="card-desc">Build an optimal binary search tree layout.</div>
+      <div class="card-footer"><span class="card-complexity">O(n^3)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+
+    <button class="algo-card" style="--card-color:#ff6b6b" hx-get="partials/algo-layout.html?algo=hamiltonian" hx-target="#app" hx-push-url="true">
+      <div class="card-num">08</div>
+      <div class="card-icon-row"><div class="card-icon">HC</div><span class="card-badge">Backtracking</span></div>
+      <div class="card-title">Hamiltonian Cycle</div>
+      <div class="card-desc">Search cycle paths with backtracking steps.</div>
+      <div class="card-footer"><span class="card-complexity">O(n!)</span><div class="card-arrow">-&gt;</div></div>
+    </button>
+  </div>
+</section>

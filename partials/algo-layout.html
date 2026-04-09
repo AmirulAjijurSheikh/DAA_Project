@@ -1,0 +1,35 @@
+<section id="algo-page">
+  <div class="algo-topbar">
+    <button
+      class="back-btn"
+      hx-get="partials/home.html"
+      hx-target="#app"
+      hx-push-url="true"
+    >
+      Back
+    </button>
+    <span class="algo-name" id="algo-title">Algorithm</span>
+    <span class="algo-tag" id="algo-tag-badge"></span>
+  </div>
+
+  <div class="algo-layout">
+    <div class="algo-main">
+      <div id="algo-inputs" class="input-section"></div>
+
+      <div class="ctrl-row">
+        <button class="ctrl-btn primary" id="run-btn" data-action="run">Run</button>
+        <button class="ctrl-btn" data-action="step">Step</button>
+        <button class="ctrl-btn danger" data-action="reset">Reset</button>
+      </div>
+
+      <div class="viz-area">
+        <div class="viz-title">Visualization</div>
+        <div id="viz-content"></div>
+      </div>
+    </div>
+
+    <aside class="algo-sidebar">
+      <div id="sidebar-content"></div>
+    </aside>
+  </div>
+</section>

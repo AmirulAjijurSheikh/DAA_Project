@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DAA Visualizer</title>
+</head>
+<body>
+  <header>
+    <div class="logo">DAA<span>_</span>VISUALIZER</div>
+    <nav>
+      <button
+        class="active"
+        hx-get="partials/home.html"
+        hx-target="#app"
+        hx-push-url="true"
+      >
+        Home
+      </button>
+      <button
+        hx-get="partials/home.html"
+        hx-target="#app"
+        hx-push-url="true"
+      >
+        Algorithms
+      </button>
+    </nav>
+  </header>
+
+  <main class="page">
+    <div
+      id="app"
+      hx-get="partials/home.html"
+      hx-trigger="load"
+      hx-target="#app"
+      hx-swap="innerHTML"
+    ></div>
+  </main>
+
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
