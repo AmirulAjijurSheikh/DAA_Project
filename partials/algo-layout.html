@@ -1,35 +1,36 @@
-<section id="algo-page">
-  <div class="algo-topbar">
-    <button
-      class="back-btn"
+<section id="algo-page" data-page="algorithm" data-algo="" class="space-y-6">
+  <div class="algo-topbar flex items-center gap-3 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+    <a
+      class="back-btn rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+      href="#/home"
       hx-get="partials/home.html"
       hx-target="#app"
-      hx-push-url="true"
+      hx-push-url="#/home"
     >
       Back
-    </button>
-    <span class="algo-name" id="algo-title">Algorithm</span>
-    <span class="algo-tag" id="algo-tag-badge"></span>
+    </a>
+    <span class="algo-name text-lg font-semibold text-slate-900" id="algo-title">Algorithm</span>
+    <span class="algo-tag text-sm text-slate-600" id="algo-tag-badge"></span>
   </div>
 
-  <div class="algo-layout">
+  <div class="algo-layout grid gap-5 lg:grid-cols-[2fr_1fr]">
     <div class="algo-main">
-      <div id="algo-inputs" class="input-section"></div>
+      <div id="algo-inputs" class="input-section rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200"></div>
 
-      <div class="ctrl-row">
-        <button class="ctrl-btn primary" id="run-btn" data-action="run">Run</button>
-        <button class="ctrl-btn" data-action="step">Step</button>
-        <button class="ctrl-btn danger" data-action="reset">Reset</button>
+      <div class="ctrl-row mt-4 flex flex-wrap gap-2">
+        <button class="ctrl-btn primary rounded-md bg-cyan-600 px-4 py-2 text-sm font-medium text-white" data-action="run">Run</button>
+        <button class="ctrl-btn rounded-md bg-slate-200 px-4 py-2 text-sm font-medium text-slate-800" data-action="step">Step</button>
+        <button class="ctrl-btn danger rounded-md bg-rose-600 px-4 py-2 text-sm font-medium text-white" data-action="reset">Reset</button>
       </div>
 
-      <div class="viz-area">
-        <div class="viz-title">Visualization</div>
+      <div class="viz-area mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+        <div class="viz-title mb-2 text-base font-semibold text-slate-800">Visualization</div>
         <div id="viz-content"></div>
       </div>
     </div>
 
-    <aside class="algo-sidebar">
-      <div id="sidebar-content"></div>
+    <aside class="algo-sidebar rounded-xl bg-white p-4 shadow-sm ring-1 ring-slate-200">
+      <div id="sidebar-content" class="space-y-3"></div>
     </aside>
   </div>
 </section>
