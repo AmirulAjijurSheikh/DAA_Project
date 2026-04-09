@@ -7,6 +7,8 @@ const TRUSTED_RESULT_BRAND = Symbol("trustedSidebarResult");
 const TRUSTED_RESULT_TEMPLATES = Object.freeze({
   missingRunner:
     '<div class="text-sm text-amber-700">Runner module is not available yet.</div>',
+  setupError:
+    '<div class="text-sm text-rose-700">Unable to initialize this algorithm right now. Please try again.</div>',
 });
 
 const DEFAULT_RESULT_TEXT = "Run the algorithm to see results.";

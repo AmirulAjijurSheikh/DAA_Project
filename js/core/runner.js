@@ -4,11 +4,89 @@ import { renderSidebar, addLog, createTrustedSidebarResult } from "./sidebar.js"
 import { state } from "./state.js";
 
 const DEFAULT_SPEED_MS = 700;
+const SETUP_FAILURE_LOG_MESSAGE = "Unable to initialize this algorithm. Try selecting it again.";
 
 const algorithmRegistry = Object.fromEntries(ALGO_ORDER.map((algo) => [algo, null]));
 
+/**
+ * @typedef {object} AlgorithmRunnerContext
+ * @property {typeof state} state
+ * @property {(message: unknown) => void} addLog
+ * @property {(algo: string | null, resultValue?: unknown) => void} renderSidebar
+ * @property {() => number} getSpeedMs
+ * @property {(targetState: typeof state) => void} clearTimer
+ * @property {(tagName: string, className?: string, text?: string) => HTMLElement} el
+ * @property {(elementId: string, html: string) => void} setTrustedHTML
+ * @property {() => boolean} isActive
+ */
+
+/**
+ * @typedef {object} AlgorithmRunnerOutcome
+ * @property {Array<(() => void)>} [steps]
+ * @property {Array<unknown>} [logs]
+ * @property {unknown} [resultText]
+ * @property {unknown} [resultHtml]
+ * @property {unknown} [trustedResult]
+ */
+
+/**
+ * @typedef {(ctx: AlgorithmRunnerContext) => AlgorithmRunnerOutcome | void} AlgorithmRunHandler
+ */
+
+/**
+ * @typedef {object} AlgorithmRunnerModule
+ * @property {(ctx: AlgorithmRunnerContext) => Promise<void> | void} [setup]
+ * @property {AlgorithmRunHandler} [run]
+ * @property {(ctx: AlgorithmRunnerContext) => Promise<void> | void} [reset]
+ * @property {(ctx: AlgorithmRunnerContext, actionNode: HTMLElement) => boolean | void} [action]
+ */
+
+/**
+ * @typedef {AlgorithmRunHandler | AlgorithmRunnerModule | null} RegisteredRunner
+ */
+
 function isKnownAlgo(algo) {
   return Object.prototype.hasOwnProperty.call(algorithmRegistry, algo);
+}
+
+function isObject(value) {
+  return value !== null && typeof value === "object";
+}
+
+function isFunction(value) {
+  return typeof value === "function";
+}
+
+function isRunnerModule(value) {
+  return isObject(value);
+}
+
+function hasModuleMethod(handler, methodName) {
+  return isRunnerModule(handler) && isFunction(handler[methodName]);
+}
+
+function getRunHandler(handler) {
+  if (isFunction(handler)) {
+    return handler;
+  }
+
+  if (hasModuleMethod(handler, "run")) {
+    return handler.run;
+  }
+
+  return null;
+}
+
+function getSetupHandler(handler) {
+  return hasModuleMethod(handler, "setup") ? handler.setup : null;
+}
+
+function getResetHandler(handler) {
+  return hasModuleMethod(handler, "reset") ? handler.reset : null;
+}
+
+function getActionHandler(handler) {
+  return hasModuleMethod(handler, "action") ? handler.action : null;
 }
 
 function normalizeSpeed(value) {
@@ -38,15 +116,28 @@ function resolveRunnerHandler() {
   return algorithmRegistry[key] || null;
 }
 
-export function createAlgorithmContext() {
+function createGuardedMethod(method, shouldApply) {
+  return (...args) => {
+    if (!shouldApply()) {
+      return undefined;
+    }
+
+    return method(...args);
+  };
+}
+
+export function createAlgorithmContext(options = {}) {
+  const shouldApply = isFunction(options.shouldApply) ? options.shouldApply : () => true;
+
   return {
     state,
-    addLog,
-    renderSidebar,
+    addLog: createGuardedMethod(addLog, shouldApply),
+    renderSidebar: createGuardedMethod(renderSidebar, shouldApply),
     getSpeedMs,
     clearTimer,
     el,
-    setTrustedHTML,
+    setTrustedHTML: createGuardedMethod(setTrustedHTML, shouldApply),
+    isActive: shouldApply,
   };
 }
 
@@ -96,22 +187,13 @@ function initializeQueueIfNeeded() {
   state.stepIdx = 0;
 
   const handler = resolveRunnerHandler();
-  if (!handler) {
+  const runHandler = getRunHandler(handler);
+  if (!runHandler) {
     fallbackMissingRunner();
     return;
   }
 
-  if (typeof handler === "function") {
-    applyRunnerOutcome(handler(createAlgorithmContext()));
-    return;
-  }
-
-  if (typeof handler.run === "function") {
-    applyRunnerOutcome(handler.run(createAlgorithmContext()));
-    return;
-  }
-
-  fallbackMissingRunner();
+  applyRunnerOutcome(runHandler(createAlgorithmContext()));
 }
 
 function runNextQueuedStep() {
@@ -154,13 +236,15 @@ export function stepAlgo() {
 
 export function resetAlgo() {
   clearTimer(state);
+  invalidateSetupLifecycle();
   state.stepQueue = [];
   state.stepIdx = 0;
   state.logs = [];
 
   const handler = resolveRunnerHandler();
-  if (handler && typeof handler === "object" && typeof handler.reset === "function") {
-    handler.reset(createAlgorithmContext());
+  const resetHandler = getResetHandler(handler);
+  if (resetHandler) {
+    resetHandler(createAlgorithmContext());
     return;
   }
 
@@ -189,20 +273,51 @@ export function setAlgoRunnerRegistry(registry) {
   }
 }
 
+export function invalidateSetupLifecycle() {
+  state.setupVersion += 1;
+}
+
+function isActiveSetup(algo, version) {
+  return state.currentAlgo === algo && state.setupVersion === version;
+}
+
 export async function setupCurrentAlgo() {
-  const handler = resolveRunnerHandler();
-  if (!handler || typeof handler !== "object" || typeof handler.setup !== "function") {
-    return;
+  const setupAlgo = state.currentAlgo;
+  if (!setupAlgo) {
+    return false;
   }
 
-  await handler.setup(createAlgorithmContext());
+  const handler = resolveRunnerHandler();
+  const setupHandler = getSetupHandler(handler);
+  if (!setupHandler) {
+    return false;
+  }
+
+  invalidateSetupLifecycle();
+  const setupVersion = state.setupVersion;
+  const shouldApply = () => isActiveSetup(setupAlgo, setupVersion);
+
+  try {
+    await setupHandler(createAlgorithmContext({ shouldApply }));
+    return shouldApply();
+  } catch {
+    if (!shouldApply()) {
+      return false;
+    }
+
+    console.error(`[runner] setup failed for ${setupAlgo}`);
+    renderSidebar(setupAlgo, createTrustedSidebarResult("setupError"));
+    addLog(SETUP_FAILURE_LOG_MESSAGE);
+    return false;
+  }
 }
 
 export function dispatchAlgoAction(actionNode) {
   const handler = resolveRunnerHandler();
-  if (!handler || typeof handler !== "object" || typeof handler.action !== "function") {
+  const actionHandler = getActionHandler(handler);
+  if (!actionHandler) {
     return false;
   }
 
-  return handler.action(createAlgorithmContext(), actionNode) === true;
+  return actionHandler(createAlgorithmContext(), actionNode) === true;
 }

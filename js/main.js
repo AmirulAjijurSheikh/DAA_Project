@@ -2,6 +2,7 @@ import { ALGO_META } from "./core/config.js";
 import { clearTimer, setText } from "./core/dom.js";
 import {
   dispatchAlgoAction,
+  invalidateSetupLifecycle,
   resetAlgo,
   runAlgo,
   setAlgoRunnerRegistry,
@@ -94,6 +95,7 @@ function setBadgeColor(meta) {
 
 function resetTransientState() {
   clearTimer(state);
+  invalidateSetupLifecycle();
   state.stepQueue = [];
   state.stepIdx = 0;
   state.logs = [];

@@ -1,5 +1,6 @@
 export const state = {
   currentAlgo: null,
+  setupVersion: 0,
   animTimer: null,
   stepQueue: [],
   stepIdx: 0,

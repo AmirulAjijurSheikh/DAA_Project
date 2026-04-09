@@ -1,5 +1,3 @@
-import { setTrustedHTML } from "../core/dom.js";
-
 const PARTIAL_CACHE = new Map();
 
 export function clamp(value, min, max) {
@@ -38,9 +36,14 @@ export async function loadInputPartial(slug, fallbackHtml = "") {
 
 export async function setupAlgoShell(ctx, slug, fallbackInputsHtml, vizHtml) {
   const inputsHtml = await loadInputPartial(slug, fallbackInputsHtml);
-  setTrustedHTML("algo-inputs", inputsHtml);
-  setTrustedHTML("viz-content", vizHtml);
+  if (!ctx.isActive()) {
+    return false;
+  }
+
+  ctx.setTrustedHTML("algo-inputs", inputsHtml);
+  ctx.setTrustedHTML("viz-content", vizHtml);
   ctx.renderSidebar(slug);
+  return ctx.isActive();
 }
 
 export function getCanvasContext(canvasId, height = 300) {

@@ -212,7 +212,9 @@ function applyCase(ctx, nextIndex) {
 export async function setup(ctx) {
   const { index, tc } = getCurrentCase(ctx.state);
   ctx.state.mstTC = index;
-  await setupAlgoShell(ctx, "mst", INPUTS_FALLBACK, VIZ_HTML);
+  if (!(await setupAlgoShell(ctx, "mst", INPUTS_FALLBACK, VIZ_HTML))) {
+    return;
+  }
   selectedEdges = [];
   cycleEdge = null;
   renderCaseControls(ctx.state);

@@ -95,7 +95,9 @@ function drawGraph(path = [], current = -1) {
 }
 
 export async function setup(ctx) {
-  await setupAlgoShell(ctx, "hamiltonian", INPUTS_FALLBACK, VIZ_HTML);
+  if (!(await setupAlgoShell(ctx, "hamiltonian", INPUTS_FALLBACK, VIZ_HTML))) {
+    return;
+  }
   drawGraph([], -1);
 }
 

@@ -201,7 +201,9 @@ export async function setup(ctx) {
   if (!Number.isInteger(ctx.state.gcPreset)) {
     ctx.state.gcPreset = 0;
   }
-  await setupAlgoShell(ctx, "graphcoloring", INPUTS_FALLBACK, VIZ_HTML);
+  if (!(await setupAlgoShell(ctx, "graphcoloring", INPUTS_FALLBACK, VIZ_HTML))) {
+    return;
+  }
   applyPreset(ctx, ctx.state.gcPreset);
   renderPresetControls(ctx);
   drawGraph();
