@@ -1,8 +1,24 @@
 import { ALGO_META } from "./core/config.js";
 import { clearTimer, setText } from "./core/dom.js";
-import { resetAlgo, runAlgo, stepAlgo } from "./core/runner.js";
+import {
+  dispatchAlgoAction,
+  resetAlgo,
+  runAlgo,
+  setAlgoRunnerRegistry,
+  setupCurrentAlgo,
+  stepAlgo,
+} from "./core/runner.js";
 import { renderSidebar } from "./core/sidebar.js";
 import { state } from "./core/state.js";
+import * as complexity from "./algorithms/complexity.js";
+import * as mst from "./algorithms/mst.js";
+import * as knapsack from "./algorithms/knapsack.js";
+import * as activity from "./algorithms/activity.js";
+import * as subarray from "./algorithms/subarray.js";
+import * as lcs from "./algorithms/lcs.js";
+import * as obst from "./algorithms/obst.js";
+import * as hamiltonian from "./algorithms/hamiltonian.js";
+import * as graphcoloring from "./algorithms/graphcoloring.js";
 
 const RUNNER_CONTROLS_BOUND = "__daaRunnerControlsBound";
 
@@ -82,6 +98,7 @@ function resetTransientState() {
   state.stepIdx = 0;
   state.logs = [];
   state.mstTC = 0;
+  state.gcPreset = 0;
 }
 
 function resolveKnownAlgoSlug(slug) {
@@ -108,6 +125,7 @@ function initAlgorithmPage(algoPage, slug) {
 
   if (resolvedSlug) {
     renderSidebar(resolvedSlug);
+    void setupCurrentAlgo();
   }
 }
 
@@ -153,11 +171,15 @@ function onActionClick(evt) {
   }
 
   const action = actionNode.dataset.action;
+  evt.preventDefault();
+
   if (action !== "run" && action !== "step" && action !== "reset") {
+    const handled = dispatchAlgoAction(actionNode);
+    if (handled) {
+      return;
+    }
     return;
   }
-
-  evt.preventDefault();
 
   if (action === "run") {
     runAlgo();
@@ -171,6 +193,18 @@ function onActionClick(evt) {
 
   resetAlgo();
 }
+
+setAlgoRunnerRegistry({
+  complexity,
+  mst,
+  knapsack,
+  activity,
+  subarray,
+  lcs,
+  obst,
+  hamiltonian,
+  graphcoloring,
+});
 
 document.body.addEventListener("htmx:afterSwap", onAfterSwap);
 

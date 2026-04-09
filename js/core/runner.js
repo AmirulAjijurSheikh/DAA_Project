@@ -1,4 +1,4 @@
-import { clearTimer } from "./dom.js";
+import { clearTimer, el, setTrustedHTML } from "./dom.js";
 import { ALGO_ORDER } from "./config.js";
 import { renderSidebar, addLog, createTrustedSidebarResult } from "./sidebar.js";
 import { state } from "./state.js";
@@ -36,6 +36,18 @@ function resolveRunnerHandler() {
   }
 
   return algorithmRegistry[key] || null;
+}
+
+export function createAlgorithmContext() {
+  return {
+    state,
+    addLog,
+    renderSidebar,
+    getSpeedMs,
+    clearTimer,
+    el,
+    setTrustedHTML,
+  };
 }
 
 function applyRunnerOutcome(outcome) {
@@ -90,12 +102,12 @@ function initializeQueueIfNeeded() {
   }
 
   if (typeof handler === "function") {
-    applyRunnerOutcome(handler({ state, addLog, renderSidebar }));
+    applyRunnerOutcome(handler(createAlgorithmContext()));
     return;
   }
 
   if (typeof handler.run === "function") {
-    applyRunnerOutcome(handler.run({ state, addLog, renderSidebar }));
+    applyRunnerOutcome(handler.run(createAlgorithmContext()));
     return;
   }
 
@@ -148,7 +160,7 @@ export function resetAlgo() {
 
   const handler = resolveRunnerHandler();
   if (handler && typeof handler === "object" && typeof handler.reset === "function") {
-    handler.reset({ state, renderSidebar, addLog });
+    handler.reset(createAlgorithmContext());
     return;
   }
 
@@ -175,4 +187,22 @@ export function setAlgoRunnerRegistry(registry) {
       algorithmRegistry[key] = registry[key];
     }
   }
+}
+
+export async function setupCurrentAlgo() {
+  const handler = resolveRunnerHandler();
+  if (!handler || typeof handler !== "object" || typeof handler.setup !== "function") {
+    return;
+  }
+
+  await handler.setup(createAlgorithmContext());
+}
+
+export function dispatchAlgoAction(actionNode) {
+  const handler = resolveRunnerHandler();
+  if (!handler || typeof handler !== "object" || typeof handler.action !== "function") {
+    return false;
+  }
+
+  return handler.action(createAlgorithmContext(), actionNode) === true;
 }

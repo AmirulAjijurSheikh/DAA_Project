@@ -5,4 +5,5 @@ export const state = {
   stepIdx: 0,
   logs: [],
   mstTC: 0,
+  gcPreset: 0,
 };
