@@ -1,20 +1,15 @@
 import { clearTimer } from "./dom.js";
-import { renderSidebar, addLog } from "./sidebar.js";
+import { ALGO_ORDER } from "./config.js";
+import { renderSidebar, addLog, createTrustedSidebarResult } from "./sidebar.js";
 import { state } from "./state.js";
 
 const DEFAULT_SPEED_MS = 700;
 
-const algorithmRegistry = {
-  complexity: null,
-  mst: null,
-  knapsack: null,
-  activity: null,
-  subarray: null,
-  lcs: null,
-  obst: null,
-  hamiltonian: null,
-  graphcoloring: null,
-};
+const algorithmRegistry = Object.fromEntries(ALGO_ORDER.map((algo) => [algo, null]));
+
+function isKnownAlgo(algo) {
+  return Object.prototype.hasOwnProperty.call(algorithmRegistry, algo);
+}
 
 function normalizeSpeed(value) {
   const numeric = Number(value);
@@ -59,24 +54,34 @@ function applyRunnerOutcome(outcome) {
     }
   }
 
-  if (typeof outcome.resultHtml === "string") {
+  if (Object.prototype.hasOwnProperty.call(outcome, "trustedResult")) {
+    renderSidebar(state.currentAlgo, outcome.trustedResult);
+    return;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(outcome, "resultText")) {
+    renderSidebar(state.currentAlgo, outcome.resultText);
+    return;
+  }
+
+  if (Object.prototype.hasOwnProperty.call(outcome, "resultHtml")) {
     renderSidebar(state.currentAlgo, outcome.resultHtml);
   }
 }
 
 function fallbackMissingRunner() {
   const algo = state.currentAlgo || "selected algorithm";
-  renderSidebar(
-    state.currentAlgo,
-    '<div class="text-sm text-amber-700">Runner module is not available yet.</div>',
-  );
+  renderSidebar(state.currentAlgo, createTrustedSidebarResult("missingRunner"));
   addLog(`No runner registered for ${algo}.`);
 }
 
 function initializeQueueIfNeeded() {
-  if (state.stepQueue.length > 0 || state.stepIdx > 0) {
+  if (state.stepQueue.length > 0 && state.stepIdx < state.stepQueue.length) {
     return;
   }
+
+  state.stepQueue = [];
+  state.stepIdx = 0;
 
   const handler = resolveRunnerHandler();
   if (!handler) {
@@ -153,7 +158,7 @@ export function resetAlgo() {
 }
 
 export function registerAlgoRunner(algo, handler) {
-  if (!algo) {
+  if (!algo || !isKnownAlgo(algo)) {
     return;
   }
 
@@ -165,7 +170,9 @@ export function setAlgoRunnerRegistry(registry) {
     return;
   }
 
-  for (const [key, value] of Object.entries(registry)) {
-    algorithmRegistry[key] = value;
+  for (const key of ALGO_ORDER) {
+    if (Object.prototype.hasOwnProperty.call(registry, key)) {
+      algorithmRegistry[key] = registry[key];
+    }
   }
 }
