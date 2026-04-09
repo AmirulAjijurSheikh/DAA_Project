@@ -1,6 +1,10 @@
 import { ALGO_META } from "./core/config.js";
 import { clearTimer, setText } from "./core/dom.js";
+import { resetAlgo, runAlgo, stepAlgo } from "./core/runner.js";
+import { renderSidebar } from "./core/sidebar.js";
 import { state } from "./core/state.js";
+
+const RUNNER_CONTROLS_BOUND = "__daaRunnerControlsBound";
 
 function normalizeAlgoSlug(slug) {
   if (!slug) {
@@ -101,6 +105,10 @@ function initAlgorithmPage(algoPage, slug) {
   setText("algo-title", meta?.title || "Algorithm");
   setText("algo-tag-badge", meta?.tag || "");
   setBadgeColor(meta);
+
+  if (resolvedSlug) {
+    renderSidebar(resolvedSlug);
+  }
 }
 
 function initPageFromApp(app, evt) {
@@ -128,7 +136,48 @@ function onAfterSwap(evt) {
   initPageFromApp(target, evt);
 }
 
+function onActionClick(evt) {
+  const target = evt.target;
+  if (!(target instanceof Element)) {
+    return;
+  }
+
+  const actionNode = target.closest("[data-action]");
+  if (!(actionNode instanceof HTMLElement)) {
+    return;
+  }
+
+  const algoPage = actionNode.closest("#algo-page[data-page='algorithm']");
+  if (!algoPage) {
+    return;
+  }
+
+  const action = actionNode.dataset.action;
+  if (action !== "run" && action !== "step" && action !== "reset") {
+    return;
+  }
+
+  evt.preventDefault();
+
+  if (action === "run") {
+    runAlgo();
+    return;
+  }
+
+  if (action === "step") {
+    stepAlgo();
+    return;
+  }
+
+  resetAlgo();
+}
+
 document.body.addEventListener("htmx:afterSwap", onAfterSwap);
+
+if (!window[RUNNER_CONTROLS_BOUND]) {
+  document.body.addEventListener("click", onActionClick);
+  window[RUNNER_CONTROLS_BOUND] = true;
+}
 
 const appRoot = document.getElementById("app");
 if (appRoot) {
